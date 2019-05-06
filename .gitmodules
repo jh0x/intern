@@ -1,0 +1,6 @@
+[submodule "extern/phmap"]
+	path = extern/phmap
+	url = https://github.com/greg7mdp/parallel-hashmap.git
+[submodule "extern/doctest"]
+	path = extern/doctest
+	url = https://github.com/onqtam/doctest.git
