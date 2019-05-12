@@ -60,13 +60,24 @@ std::size_t hash_value(const intern::details::string_common<T, Traits>& s)
 }
 
 // Chunk of memory for "allocating" strings
-alignas(8) static char gBuffer[131072]{};
+constexpr static auto kBufferSize = 131072;
+alignas(8) static char gBuffer[kBufferSize]{};
 static std::size_t gOffset = 0;
 static void raze()
 {
     std::memset(gBuffer, '\0', gOffset);
     gOffset = 0;
 }
+
+#ifdef __cpp_exceptions
+[[noreturn]] static void _bad_alloc() {
+    throw std::bad_alloc{};
+}
+#else
+[[noreturn]] static void _bad_alloc() {
+    std::abort();
+}
+#endif
 
 // Minimal interner configuration
 struct interner_traits
@@ -80,6 +91,10 @@ struct interner_traits
         gOffset = ((gOffset + (a - 1)) & -a);
         void* ptr = gBuffer + gOffset;
         gOffset += s;
+        if(gOffset > kBufferSize)
+        {
+            _bad_alloc();
+        }
         return ptr;
     }
 };
