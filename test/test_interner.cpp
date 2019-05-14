@@ -74,7 +74,7 @@ static void raze()
     throw std::bad_alloc{};
 }
 #else
-[[noreturn]] static void _bad_alloc() {
+[[noreturn]] static void _bad_alloc() noexcept {
     std::abort();
 }
 #endif
@@ -86,7 +86,8 @@ struct interner_traits
     template<typename K, typename V>
     using lookupT = phmap::parallel_flat_hash_map<K, V>;
 
-    static void* allocate(std::size_t s, std::size_t a) noexcept
+    static void* allocate(std::size_t s, std::size_t a)
+        noexcept(noexcept(_bad_alloc()))
     {
         gOffset = ((gOffset + (a - 1)) & -a);
         void* ptr = gBuffer + gOffset;
