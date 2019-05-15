@@ -88,7 +88,7 @@ private:
     {
         if(INTERN__LIKELY(sz <= sso_size))
         {
-            Traits::copy(_s._data, s, sz);
+            Traits::copy(_raw, s, sz);
             _raw[sz] = '\0';
             _s.size(sz);
         } else {
