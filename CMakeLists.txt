@@ -36,6 +36,7 @@ set(MY_WARNING_FLAGS_Clang ${MY_DEFAULT_WARNING_FLAGS_GCC})
 add_compile_options(
     "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<CONFIG:DEBUG>>:${MY_DEBUG_FLAGS}>"
     "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<CONFIG:RELEASE>>:${MY_RELEASE_FLAGS}>"
+    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<CONFIG:ASAN>>:${MY_RELEASE_FLAGS}>"
     )
 add_compile_options("$<$<CXX_COMPILER_ID:GNU>:${MY_WARNING_FLAGS_GNU}>")
 add_compile_options("$<$<CXX_COMPILER_ID:Clang>:${MY_WARNING_FLAGS_Clang}>")
