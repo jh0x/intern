@@ -46,6 +46,7 @@ public:
     using typename BaseT::const_reverse_iterator;
     using typename BaseT::size_type;
     template<typename, typename> friend class interner;
+    constexpr static auto sso_size = 0;
 
     constexpr explicit string_far(const char* data) : _data{data} {}
     constexpr string_far(const string_far&) = default;
@@ -59,6 +60,7 @@ public:
 
     constexpr size_type size() const noexcept { return _meta()._len; }
     constexpr const_pointer data() const noexcept { return _data; }
+    constexpr bool small() const noexcept { return false; }
 
 private:
     using metadata = details::metadata<Traits>;

@@ -126,6 +126,7 @@ TEST_CASE_TEMPLATE_DEFINE("interner", T, test_id)
     x::interner<interner_traits, typename T::string_traits> i;
 
     using stringT = decltype(T::intern(i, ""));
+    constexpr bool can_be_small = stringT::sso_size;
     {
         for(auto& s: words)
         {
@@ -133,6 +134,8 @@ TEST_CASE_TEMPLATE_DEFINE("interner", T, test_id)
             REQUIRE(s.size() == is.size());
             REQUIRE(s.length() == is.length());
             REQUIRE(s.empty() == is.empty());
+            REQUIRE(is.small()
+                    == (can_be_small && is.size() <= stringT::sso_size));
             REQUIRE(0 == std::strncmp(s.c_str(), is.c_str(), s.size()));
             for(std::size_t q = 0; q != s.size(); ++q)
             {
