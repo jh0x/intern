@@ -268,6 +268,17 @@ struct test_far_string
     }
 };
 
+template<typename StringTraits>
+struct test_sso_tiny
+{
+    using string_traits = StringTraits;
+    template<typename I, typename... Args>
+    static auto intern(I& i, Args... args)
+    {
+        return i.tiny(std::forward<Args>(args)...);
+    }
+};
+
 template<std::size_t S, typename StringTraits>
 struct test_sso_v1_string
 {
@@ -333,6 +344,7 @@ struct Default64 : Default
 
 #define TEST_IT(traits)                         \
 TYPE_TO_STRING(test_far_string<traits>);        \
+TYPE_TO_STRING(test_sso_tiny<traits>);          \
 TYPE_TO_STRING(test_sso_v1_string<16, traits>); \
 TYPE_TO_STRING(test_sso_v1_string<24, traits>); \
 TYPE_TO_STRING(test_sso_v1_string<32, traits>); \
@@ -342,6 +354,7 @@ TYPE_TO_STRING(test_sso_v2_string<32, traits>); \
 TEST_CASE_TEMPLATE_INVOKE(                      \
         test_id                                 \
         , test_far_string<traits>               \
+        , test_sso_tiny<traits>                 \
         , test_sso_v1_string<16, traits>        \
         , test_sso_v1_string<24, traits>        \
         , test_sso_v1_string<32, traits>        \

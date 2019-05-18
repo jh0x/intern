@@ -26,6 +26,7 @@
 #include <intern/details/utils.hpp>
 #include <intern/default_string_traits.hpp>
 #include <intern/string_far.hpp>
+#include <intern/string_sso_tiny.hpp>
 #include <intern/string_sso_v1.hpp>
 #include <intern/string_sso_v2.hpp>
 
@@ -42,6 +43,7 @@ public:
     using hasherT = typename ITraits::hasherT;
 
     using stringF = string_far<Traits>;
+    using stringST = string_sso_tiny<Traits>;
     static_assert(sizeof(stringF) == sizeof(char*), "Size problem");
     template<size_t S> using stringS1 = string_sso_v1<S, Traits>;
     template<size_t S> using stringS2 = string_sso_v2<S, Traits>;
@@ -55,6 +57,13 @@ public:
     template<size_t N>
     stringF far(const char (&s)[N]) { return far(s, N - 1); }
 
+    stringST tiny(const char* s, typename Traits::size_type sz);
+    stringST tiny(const std::string& s)
+    {
+        return tiny(s.data(), s.size());
+    }
+    template<size_t N>
+    stringST tiny(const char (&s)[N]) { return tiny(s, N - 1); }
 
     template<size_t S>
     stringS1<S> sso1(const char* s, typename Traits::size_type sz);
@@ -114,6 +123,18 @@ string_far<Traits> interner<ITraits, Traits>::far(
     string_far<Traits> res{m->_data};
     _lookup.insert(std::make_pair(lm, res));
     return res;
+}
+
+template<typename ITraits, typename Traits>
+string_sso_tiny<Traits> interner<ITraits, Traits>::tiny(
+        const char* s, typename Traits::size_type sz)
+{
+    if(sz <= stringST::sso_size)
+    {
+        return stringST(s, sz);
+    }
+    return stringST(far(s, sz));
+
 }
 
 template<typename ITraits, typename Traits>
