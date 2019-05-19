@@ -1,3 +1,4 @@
+#pragma once
 // The MIT License (MIT)
 //
 // Copyright (c) 2019 jh0x
@@ -256,7 +257,6 @@ TEST_CASE_TEMPLATE_DEFINE("interner", T, test_id)
     }
 }
 
-
 ///////////////////////////////////////////////////////////////////////
 // Test parameters
 
@@ -366,9 +366,3 @@ TEST_CASE_TEMPLATE_INVOKE(                      \
         , test_sso_v2_string<32, traits>        \
         );
 
-TEST_IT(Default);
-TEST_IT(DefaultFarDeep);
-TEST_IT(DefaultStrOps);
-TEST_IT(Default8);
-TEST_IT(Default32);
-TEST_IT(Default64);

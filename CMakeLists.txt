@@ -96,7 +96,7 @@ endfunction(target_link_libraries_system)
 ###################################################################
 
 add_library(intern INTERFACE)
-target_include_directories(intern INTERFACE 
+target_include_directories(intern INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
@@ -109,7 +109,14 @@ enable_testing()
 add_library(test_main OBJECT test/main.cpp)
 target_link_libraries(test_main doctest) # Why aren't you transitive?
 
-add_executable(test_intern test/test_interner.cpp $<TARGET_OBJECTS:test_main>)
+add_executable(test_intern
+    test/test_interner0.cpp
+    test/test_interner1.cpp
+    test/test_interner2.cpp
+    test/test_interner3.cpp
+    test/test_interner4.cpp
+    test/test_interner5.cpp
+    $<TARGET_OBJECTS:test_main>)
 target_include_directories(test_intern SYSTEM PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/extern/phmap>)
 target_link_libraries(test_intern intern)
