@@ -52,7 +52,8 @@ public:
     static_assert(S % 8 == 0, "size should be a multiple of 8");
 
     constexpr string_sso_v2(const string_sso_v2& o) noexcept
-        : _len{o._len}
+        : BaseT{o}
+        , _len{o._len}
     {
         if(INTERN__LIKELY(o.small()))
         {
