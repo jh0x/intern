@@ -114,19 +114,26 @@ private:
     };
     struct Big
     {
-        // FIXME: endianness / nice bitops
+        union Tail
+        {
+            std::size_t _sz;
+            char _raw[sizeof(std::size_t)];
+        };
         constexpr size_type size() const noexcept
         {
-            return ~_sz + 1;
+            Tail tmp = t;
+            tmp._raw[sizeof(std::size_t) - 1] &= ~(1u);
+            return tmp._sz;
         }
         constexpr void size(size_type sz) noexcept
         {
-            _sz = ~sz + 1;
+            t._sz = sz;
+            t._raw[sizeof(std::size_t) - 1] |= 0x1;
         }
 
         const char* _data;
         char _pad[S - sizeof(char*) - sizeof(std::size_t)];
-        std::size_t _sz;
+        Tail t;
     };
     static_assert(sizeof(Small) == sizeof(Big), "Sizing problem");
     static_assert(sizeof(Small) == raw_size, "Sizing problem");
