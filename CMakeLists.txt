@@ -36,7 +36,6 @@ set(MY_WARNING_FLAGS_Clang ${MY_DEFAULT_WARNING_FLAGS_GCC})
 add_compile_options(
     "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<CONFIG:DEBUG>>:${MY_DEBUG_FLAGS}>"
     "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<CONFIG:RELEASE>>:${MY_RELEASE_FLAGS}>"
-    "$<$<AND:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,$<CONFIG:ASAN>>:${MY_RELEASE_FLAGS}>"
     )
 add_compile_options("$<$<CXX_COMPILER_ID:GNU>:${MY_WARNING_FLAGS_GNU}>")
 add_compile_options("$<$<CXX_COMPILER_ID:Clang>:${MY_WARNING_FLAGS_Clang}>")
@@ -127,6 +126,12 @@ add_test(NAME test_intern COMMAND test_intern)
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/test/words.txt
     ${CMAKE_CURRENT_BINARY_DIR}/test/words.txt COPYONLY)
+
+add_executable(internals test/internals.cpp)
+target_include_directories(internals SYSTEM PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/extern/phmap>)
+target_link_libraries(internals intern)
+
 
 ####################################################################
 ## Stuff needed to export as a CMake project
