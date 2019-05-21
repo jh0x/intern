@@ -51,7 +51,7 @@ std::size_t hash_value(const intern::details::string_common<T, Traits>& s)
 }
 
 // Chunk of memory for "allocating" strings
-constexpr static auto kBufferSize = 131072;
+constexpr static auto kBufferSize = 1 << 20;
 alignas(8) static char gBuffer[kBufferSize]{};
 static std::size_t gOffset = 0;
 static void raze()
