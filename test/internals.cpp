@@ -32,8 +32,7 @@
 
 #include <intern/string_io.hpp>
 
-
-static void dump_memory(void* ptr, std::size_t sz, std::ostream& o)
+static void dump_memory(const void* ptr, std::size_t sz, std::ostream& o)
 {
     auto h = [&o](auto x, auto width)
     {
@@ -112,6 +111,15 @@ int main()
             << "\n\t&s=" << &s
             << '\n';
         dump_memory(&s, sizeof(s), std::cout);
+        if(!s.small())
+        {
+            std::cout << "\tFar address=" << (void*)s.data() << '\n';
+            std::cout << "\tFar data:\n";
+            const auto meta_sz =
+                sizeof(x::details::metadata<decltype(i)::StringTraits>);
+            const char* meta_begin = s.data() - meta_sz;
+            dump_memory(meta_begin, s.size() + meta_sz, std::cout);
+        }
         std::cout << banner << "\n\n\n";
     };
 

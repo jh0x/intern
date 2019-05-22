@@ -40,6 +40,7 @@ template<typename ITraits, typename Traits = default_string_traits>
 class interner
 {
 public:
+    using StringTraits = Traits;
     using hasherT = typename ITraits::hasherT;
 
     using stringF = string_far<Traits>;
