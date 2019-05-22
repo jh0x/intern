@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -32,19 +33,35 @@
 
 #include <intern/string_io.hpp>
 
-static void dump_memory(const void* ptr, std::size_t sz, std::ostream& o)
+#ifdef __GNUG__
+#include <cxxabi.h>
+#include <memory>
+static std::string demangle(const char* s)
 {
+    int status = 0;
+    auto realname = std::unique_ptr<char,
+         decltype(free)*>(abi::__cxa_demangle(s, 0, 0, &status), std::free);
+    return realname ? realname.get() : s;
+}
+#else
+static std::string demangle(const char* s)
+{
+    return s;
+}
+#endif
+
+static void dump_memory(const void* ptr, std::size_t sz, std::ostream& os)
+{
+    std::ostringstream o;
     auto h = [&o](auto x, auto width)
     {
-        auto f(o.flags());
         o << std::setfill('0') << std::setw(width) << std::hex
             << static_cast<std::uint64_t>(x);
-        o.flags(f);
     };
 
     constexpr auto full_margin = 20;
     constexpr auto margin = full_margin - 2 * sizeof(void*) - 3;
-    const auto banner = std::string(full_margin + 16*3 + 4, '~');
+    const auto banner = std::string(full_margin + 16*4 + 7, '~');
 
     o << banner << '\n';
 
@@ -56,7 +73,39 @@ static void dump_memory(const void* ptr, std::size_t sz, std::ostream& o)
         o << ' ';
         h(i, 2);
     }
+    o << " | ";
+    for(std::size_t i = 0; i != 16; ++i)
+    {
+        o << std::setw(1) << i;
+    }
     o << '\n' << banner;
+
+    auto payload = [&o, first = true, fo = 0](auto p, auto i) mutable
+    {
+        // Print empty spaces for the hex values
+        for(size_t j = p % 16; j != 16; ++j)
+        {
+            if(!j) break;
+            o << "   ";
+            if(j % 4 == 0) o << ' ';
+        }
+        o << " | ";
+        // Pad elements that do not belong to the printed area 
+        const auto pad = first ? (p - i) % 16 : 0;
+        for(size_t j = 0; j != pad; ++j)
+        {
+            o << ' ';
+        }
+        int off = (i-fo) % 16 ? (i-fo) % 16 : 16;
+        for(; off > 0; --off)
+        {
+            const auto c = *reinterpret_cast<const char*>(p - off);
+            o << (::isprint(c) ? c : '.');
+        }
+        first = false;
+        fo = i;
+    };
+
     // Get to the right offset:
     auto p = reinterpret_cast<std::uintptr_t>(ptr);
     if(p % 16)
@@ -64,16 +113,19 @@ static void dump_memory(const void* ptr, std::size_t sz, std::ostream& o)
         o << '\n';
         o << std::string(margin, ' ');
         o << "0x"; h(p & ~15, 16); o << ':';
-        for(std::size_t i = 0; i < p % 16; ++i)
+        std::size_t i;
+        for(i = 0; i < p % 16; ++i)
         {
             o << "   "; if(i % 4 == 0) o << ' ';
         }
     }
     // Dump the data + pretty print
-    for(std::size_t i = 0; i != sz; ++i, ++p)
+    std::size_t i;
+    for(i = 0; i != sz; ++i, ++p)
     {
         if(p % 16 == 0)
         {
+            if(i) payload(p, i);
             o << '\n';
             o << std::string(margin, ' ');
             o << "0x"; h(p, 16); o << ':';
@@ -86,8 +138,11 @@ static void dump_memory(const void* ptr, std::size_t sz, std::ostream& o)
 
         h(*reinterpret_cast<unsigned char*>(p), 2);
     }
+    payload(p, i);
     o << '\n' << banner << '\n';
+    os << o.str();
 }
+
 
 namespace x = intern;
 
@@ -98,10 +153,10 @@ int main()
 
     auto print = [](auto generator)
     {
-        const auto banner = std::string(72, 'O');
+        const auto banner = std::string(120, 'O');
         auto s = generator();
         std::cout << '\n' << banner << '\n';
-        std::cout << "My typeinfo: " << typeid(s).name();
+        std::cout << "My typeinfo: " << demangle(typeid(s).name());
         std::cout << '\n' << banner << '\n';
         std::cout
             << "String: '" << s << "'"
@@ -122,14 +177,24 @@ int main()
         }
         std::cout << banner << "\n\n\n";
     };
+    (void)print;
 
     print([&i]{return i.tiny("0123456");});
     print([&i]{return i.sso1<16>("0123456789ABCDE");});
     print([&i]{return i.sso2<16>("01234");});
 
-    constexpr static auto txt = "This is a very very long string";
+    constexpr static auto txt =
+        "This is a very very long string. "
+        "And it will not fit in the Small String Optimised String. "
+        "So we should expect to see it interned!";
+
     print([&]{return i.far(txt);});
     print([&]{return i.tiny(txt);});
     print([&]{return i.sso1<16>(txt);});
     print([&]{return i.sso2<16>(txt);});
+
+//    char data[] = "QWERTYUIOP";
+//    std::cout << (void*) data << std::endl;
+//    dump_memory(data, 3, std::cout);
+//    dump_memory(data+1, 3, std::cout);
 }
