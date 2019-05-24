@@ -97,26 +97,22 @@ private:
 
     constexpr string_sso_tiny(FarT far)
     {
-        _ptr = far.data();
+        _uint = __builtin_bswap64(
+                reinterpret_cast<std::uintptr_t>(far.data()));
         _raw[sso_size] |= 0x1;
     }
 
     constexpr FarT far() const noexcept
     {
-        union
-        {
-            const char* ptr;
-            char b[raw_size];
-        } tmp = {_ptr};
-        tmp.ptr = _ptr;
-        tmp.b[sso_size] &= ~(1u);
-        return FarT(tmp.ptr);
+        std::uintptr_t ptr = __builtin_bswap64(_uint);
+        ptr &= ~(1u);
+        return FarT(reinterpret_cast<const char*>(ptr));
     }
 
     union
     {
-        const char* _ptr;
         char _raw[raw_size];
+        std::uintptr_t _uint;
     };
 };
 
