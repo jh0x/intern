@@ -1,6 +1,13 @@
 # intern
 Simple Interner for Immutable Strings
 
+## Table of Contents
+- [Small Strings](#small-strings)
+    - [Tiny Small String](#tiny-small-string)
+    - [Small String V1](#small-string-v1)
+    - [Small String V2](#small-string-v2)
+
+## Small Strings
 ### Tiny Small String
 
 - `sizeof(T) == sizeof(char*)`
