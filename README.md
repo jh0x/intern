@@ -114,3 +114,32 @@ const char* ptr = 0x000000000040724a, sz = 130 (0x82)
                   Here we steal one bit of storage from size to indicate mode ╝
 ```
 
+
+### Small String V2
+- `sizeof(T) == S`, `S >= 16`, `S % 8 == 0`
+- `sso_size == S - 8 - sizeof(size_type)`
+- not trivial to copy
+- data always directly under the pointer
+- check whether `small()` **NOT** always required.
+
+#### Examples:
+##### SSO
+`▒ := data pointer`, `▓ := size`, `█ - payload`
+```
+            ┏┳━━━━━━━━━━━━━━━━━━━┓
+ ┏━━━━━━━━━━┻┻━━━━━━━━━━━┓       ┃
+┌00┬01┬02┬03┐┌04┬05┬06┬07┐┌08┬09┬0a┬0b┐┌0c┬0d┬0e┬0f┐
+│▒▒│▒▒│▒▒│▒▒││▒▒│▒▒│▒▒│▒▒││▓▓│▓▓│██│██││██│██│██│00│
+└──┴──┴──┴──┘└──┴──┴──┴──┘└──┴──┴──┴──┘└──┴──┴──┴──┘
+```
+
+##### Non-SSO
+`▒ := data pointer`, `▓ := size`
+```
+            ┏┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━> far location
+ ┏━━━━━━━━━━┻┻━━━━━━━━━━━┓
+┌00┬01┬02┬03┐┌04┬05┬06┬07┐┌08┬09┬0a┬0b┐┌0c┬0d┬0e┬0f┐
+│▒▒│▒▒│▒▒│▒▒││▒▒│▒▒│▒▒│▒▒││▓▓│▓▓│  │  ││  │  │  │  │
+└──┴──┴──┴──┘└──┴──┴──┴──┘└──┴──┴──┴──┘└──┴──┴──┴──┘
+```
+
