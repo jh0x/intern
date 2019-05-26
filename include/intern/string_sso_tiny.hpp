@@ -105,7 +105,7 @@ private:
     constexpr FarT far() const noexcept
     {
         std::uintptr_t ptr = __builtin_bswap64(_uint);
-        ptr &= ~(1u);
+        ptr &= ~std::uintptr_t(1);
         return FarT(reinterpret_cast<const char*>(ptr));
     }
 
