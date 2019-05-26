@@ -6,6 +6,7 @@ Simple Interner for Immutable Strings
     - [Tiny Small String](#tiny-small-string)
     - [Small String V1](#small-string-v1)
     - [Small String V2](#small-string-v2)
+- [Internals Demo](#internals-demo)
 
 ## Small Strings
 ### Tiny Small String
@@ -150,3 +151,64 @@ const char* ptr = 0x000000000040724a, sz = 130 (0x82)
 └──┴──┴──┴──┘└──┴──┴──┴──┘└──┴──┴──┴──┘└──┴──┴──┴──┘
 ```
 
+## Internals Demo
+
+`test/internals.cpp` can be used to inspect internal representation of
+different types of small strings. In case when it was not possible to
+make use of SSO the far string from the interner is also dumped.
+
+```bash
+$ ./internals
+```
+
+Sample output for `string_sso_tiny` when SSO is used:
+```
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+My typeinfo: intern::string_sso_tiny<intern::default_string_traits>
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+String: '0123456'
+	small=1, sso_size=7
+	size=7
+	sizeof(s)=8
+	&s=0x7fff3936d888
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                      00 01 02 03  04 05 06 07  08 09 0a 0b  0c 0d 0e 0f | 0123456789abcdef
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 0x00007fff3936d880:                            30 31 32 33  34 35 36 00 |         0123456.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+```
+
+Sample output for `string_sso_v2<24>` when SSO is not used:
+```
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+My typeinfo: intern::string_sso_v2<24ul, intern::default_string_traits>
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+String: 'This is a very very long string. And it will not fit in the Small String Optimised String. So we should expect to see it interned!'
+	small=0, sso_size=13
+	size=130
+	sizeof(s)=24
+	&s=0x7ffebeb53640
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                      00 01 02 03  04 05 06 07  08 09 0a 0b  0c 0d 0e 0f | 0123456789abcdef
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 0x00007ffebeb53640:  4a 72 40 00  00 00 00 00  82 00 93 1c  00 00 00 00 | Jr@.............
+ 0x00007ffebeb53650:  60 f3 9b 8c  89 7f 00 00                           | `.......
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	Far address=0x40724a
+	Far data:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                      00 01 02 03  04 05 06 07  08 09 0a 0b  0c 0d 0e 0f | 0123456789abcdef
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 0x0000000000407240:                            82 00 54 68  69 73 20 69 |         ..This i
+ 0x0000000000407250:  73 20 61 20  76 65 72 79  20 76 65 72  79 20 6c 6f | s a very very lo
+ 0x0000000000407260:  6e 67 20 73  74 72 69 6e  67 2e 20 41  6e 64 20 69 | ng string. And i
+ 0x0000000000407270:  74 20 77 69  6c 6c 20 6e  6f 74 20 66  69 74 20 69 | t will not fit i
+ 0x0000000000407280:  6e 20 74 68  65 20 53 6d  61 6c 6c 20  53 74 72 69 | n the Small Stri
+ 0x0000000000407290:  6e 67 20 4f  70 74 69 6d  69 73 65 64  20 53 74 72 | ng Optimised Str
+ 0x00000000004072a0:  69 6e 67 2e  20 53 6f 20  77 65 20 73  68 6f 75 6c | ing. So we shoul
+ 0x00000000004072b0:  64 20 65 78  70 65 63 74  20 74 6f 20  73 65 65 20 | d expect to see 
+ 0x00000000004072c0:  69 74 20 69  6e 74 65 72  6e 65 64 21              | it interned!
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+```
