@@ -50,16 +50,6 @@ std::size_t hash_value(const intern::details::string_common<T, Traits>& s)
 }
 }
 
-// Chunk of memory for "allocating" strings
-constexpr static auto kBufferSize = 1 << 20;
-alignas(8) static char gBuffer[kBufferSize]{};
-static std::size_t gOffset = 0;
-static void raze()
-{
-    std::memset(gBuffer, '\0', gOffset);
-    gOffset = 0;
-}
-
 #ifdef __cpp_exceptions
 [[noreturn]] static void _bad_alloc() {
     throw std::bad_alloc{};
@@ -70,8 +60,10 @@ static void raze()
 }
 #endif
 
+constexpr static auto kBufferSize = 1 << 20;
+
 // Minimal interner configuration
-struct interner_traits
+struct interner_traits1
 {
     using hasherT = hash_sv;
     template<typename K, typename V>
@@ -80,14 +72,64 @@ struct interner_traits
     static void* allocate(std::size_t s, std::size_t a)
         noexcept(noexcept(_bad_alloc()))
     {
-        gOffset = ((gOffset + (a - 1)) & -a);
-        void* ptr = gBuffer + gOffset;
-        gOffset += s;
-        if(gOffset > kBufferSize)
+        _off() = ((_off() + (a - 1)) & -a);
+        void* ptr = _buf() + _off();
+        _off() += s;
+        if(_off() > kBufferSize)
         {
             _bad_alloc();
         }
         return ptr;
+    }
+    static void raze() noexcept
+    {
+        std::memset(_buf(), '\0', kBufferSize);
+        _off() = 0;
+    }
+    static char* _buf() noexcept
+    {
+        alignas(8) static char buf[kBufferSize]{};
+        return buf;
+    }
+    static std::size_t& _off() noexcept
+    {
+        static std::size_t off;
+        return off;
+    }
+};
+
+struct interner_traits2
+{
+    using hasherT = hash_sv;
+    template<typename K, typename V>
+    using lookupT = phmap::parallel_flat_hash_map<K, V>;
+
+    static void* allocate(std::size_t s, std::size_t a)
+        noexcept(noexcept(_bad_alloc()))
+    {
+        _off() = ((_off() + (a - 1)) & -a);
+        void* ptr = _buf() + _off();
+        _off() += s;
+        if(_off() > kBufferSize)
+        {
+            _bad_alloc();
+        }
+        return ptr;
+    }
+    static void raze() noexcept
+    {
+        std::memset(_buf(), '\0', kBufferSize);
+        _off() = 0;
+    }
+    static char* _buf()
+    {
+        static std::unique_ptr<char[]> buf(new char[kBufferSize]);
+        return buf.get();
+    }
+    static std::size_t& _off() noexcept
+    {
+        static std::size_t off;
+        return off;
     }
 };
 

@@ -148,8 +148,7 @@ namespace x = intern;
 
 int main()
 {
-    raze();
-    x::interner<interner_traits> i;
+    x::interner<interner_traits2> i;
 
     auto print = [](auto generator)
     {
@@ -191,7 +190,7 @@ int main()
     print([&]{return i.far(txt);});
     print([&]{return i.tiny(txt);});
     print([&]{return i.sso1<16>(txt);});
-    print([&]{return i.sso2<16>(txt);});
+    print([&]{return i.sso2<24>(txt);});
 
 //    char data[] = "QWERTYUIOP";
 //    std::cout << (void*) data << std::endl;

@@ -58,8 +58,8 @@ static const std::vector<std::string> words = get_words();
 // Test template
 TEST_CASE_TEMPLATE_DEFINE("interner", T, test_id)
 {
-    raze();
-    REQUIRE(gOffset == 0);
+    using interner_traits = typename T::interner_traits;
+    interner_traits::raze();
 
     x::interner<interner_traits, typename T::string_traits> i;
 
@@ -197,9 +197,10 @@ TEST_CASE_TEMPLATE_DEFINE("interner", T, test_id)
 ///////////////////////////////////////////////////////////////////////
 // Test parameters
 
-template<typename StringTraits>
+template<typename InternerTraits, typename StringTraits>
 struct test_far_string
 {
+    using interner_traits = InternerTraits;
     using string_traits = StringTraits;
     template<typename I, typename... Args>
     static auto intern(I& i, Args... args)
@@ -208,9 +209,10 @@ struct test_far_string
     }
 };
 
-template<typename StringTraits>
+template<typename InternerTraits, typename StringTraits>
 struct test_sso_tiny
 {
+    using interner_traits = InternerTraits;
     using string_traits = StringTraits;
     template<typename I, typename... Args>
     static auto intern(I& i, Args... args)
@@ -219,9 +221,10 @@ struct test_sso_tiny
     }
 };
 
-template<std::size_t S, typename StringTraits>
+template<typename InternerTraits, std::size_t S, typename StringTraits>
 struct test_sso_v1_string
 {
+    using interner_traits = InternerTraits;
     using string_traits = StringTraits;
     template<typename I, typename... Args>
     static auto intern(I& i, Args... args)
@@ -230,9 +233,10 @@ struct test_sso_v1_string
     }
 };
 
-template<std::size_t S, typename StringTraits>
+template<typename InternerTraits, std::size_t S, typename StringTraits>
 struct test_sso_v2_string
 {
+    using interner_traits = InternerTraits;
     using string_traits = StringTraits;
     template<typename I, typename... Args>
     static auto intern(I& i, Args... args)
@@ -282,24 +286,40 @@ struct Default64 : Default
 ///////////////////////////////////////////////////////////////////////
 // Test invocation
 
-#define TEST_IT(traits)                         \
-TYPE_TO_STRING(test_far_string<traits>);        \
-TYPE_TO_STRING(test_sso_tiny<traits>);          \
-TYPE_TO_STRING(test_sso_v1_string<16, traits>); \
-TYPE_TO_STRING(test_sso_v1_string<24, traits>); \
-TYPE_TO_STRING(test_sso_v1_string<32, traits>); \
-TYPE_TO_STRING(test_sso_v2_string<16, traits>); \
-TYPE_TO_STRING(test_sso_v2_string<24, traits>); \
-TYPE_TO_STRING(test_sso_v2_string<32, traits>); \
-TEST_CASE_TEMPLATE_INVOKE(                      \
-        test_id                                 \
-        , test_far_string<traits>               \
-        , test_sso_tiny<traits>                 \
-        , test_sso_v1_string<16, traits>        \
-        , test_sso_v1_string<24, traits>        \
-        , test_sso_v1_string<32, traits>        \
-        , test_sso_v2_string<16, traits>        \
-        , test_sso_v2_string<24, traits>        \
-        , test_sso_v2_string<32, traits>        \
+#define TEST_IT(traits)                                           \
+TYPE_TO_STRING(test_far_string<interner_traits1, traits>);        \
+TYPE_TO_STRING(test_sso_tiny<interner_traits1, traits>);          \
+TYPE_TO_STRING(test_sso_v1_string<interner_traits1, 16, traits>); \
+TYPE_TO_STRING(test_sso_v1_string<interner_traits1, 24, traits>); \
+TYPE_TO_STRING(test_sso_v1_string<interner_traits1, 32, traits>); \
+TYPE_TO_STRING(test_sso_v2_string<interner_traits1, 16, traits>); \
+TYPE_TO_STRING(test_sso_v2_string<interner_traits1, 24, traits>); \
+TYPE_TO_STRING(test_sso_v2_string<interner_traits1, 32, traits>); \
+TYPE_TO_STRING(test_far_string<interner_traits2, traits>);        \
+TYPE_TO_STRING(test_sso_tiny<interner_traits2, traits>);          \
+TYPE_TO_STRING(test_sso_v1_string<interner_traits2, 16, traits>); \
+TYPE_TO_STRING(test_sso_v1_string<interner_traits2, 24, traits>); \
+TYPE_TO_STRING(test_sso_v1_string<interner_traits2, 32, traits>); \
+TYPE_TO_STRING(test_sso_v2_string<interner_traits2, 16, traits>); \
+TYPE_TO_STRING(test_sso_v2_string<interner_traits2, 24, traits>); \
+TYPE_TO_STRING(test_sso_v2_string<interner_traits2, 32, traits>); \
+TEST_CASE_TEMPLATE_INVOKE(                                        \
+        test_id                                                   \
+        , test_far_string<interner_traits1, traits>               \
+        , test_sso_tiny<interner_traits1, traits>                 \
+        , test_sso_v1_string<interner_traits1, 16, traits>        \
+        , test_sso_v1_string<interner_traits1, 24, traits>        \
+        , test_sso_v1_string<interner_traits1, 32, traits>        \
+        , test_sso_v2_string<interner_traits1, 16, traits>        \
+        , test_sso_v2_string<interner_traits1, 24, traits>        \
+        , test_sso_v2_string<interner_traits1, 32, traits>        \
+        , test_far_string<interner_traits2, traits>               \
+        , test_sso_tiny<interner_traits2, traits>                 \
+        , test_sso_v1_string<interner_traits2, 16, traits>        \
+        , test_sso_v1_string<interner_traits2, 24, traits>        \
+        , test_sso_v1_string<interner_traits2, 32, traits>        \
+        , test_sso_v2_string<interner_traits2, 16, traits>        \
+        , test_sso_v2_string<interner_traits2, 24, traits>        \
+        , test_sso_v2_string<interner_traits2, 32, traits>        \
         );
 
