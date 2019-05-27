@@ -22,21 +22,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#if defined(__GNUC__)
-#define INTERN__LIKELY(expr) __builtin_expect(!!(expr), 1)
-#define INTERN__UNLIKELY(expr) __builtin_expect(!!(expr), 0)
-#define INTERN__RESTRICT __restrict
+#ifdef __has_include
+#   if __has_include(<string_view>) && __cplusplus >= 201703L
+#       define INTERN_HAS_STRING_VIEW 1
+#   endif
 #else
-#define INTERN__LIKELY(expr) (!!(expr))
-#define INTERN__UNLIKELY(expr) (!!(expr))
-#define INTERN__RESTRICT
+#   if _MSC_VER >= 1910 && (_MSVC_LANG > 201402 || __cplusplus > 201402)
+#       define INTERN_HAS_STRING_VIEW 1
+#   endif
 #endif
-
-#ifndef NDEBUG
-#define INTERN__ASSUME(expr) ((expr) ? static_cast<void>(0) : __builtin_unreachable())
-#else
-#include <cassert>
-#define INTERN__ASSUME(expr) assert(expr)
-#endif
-
 

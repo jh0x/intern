@@ -22,6 +22,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <intern/config.hpp>
 #include <intern/details/metadata.hpp>
 #include <intern/details/utils.hpp>
 #include <intern/default_string_traits.hpp>

@@ -23,6 +23,7 @@
 // SOFTWARE.
 
 #include <intern/details/string_common.hpp>
+#include <intern/details/utils.hpp>
 #include <intern/string_far.hpp>
 
 namespace intern {
@@ -63,19 +64,19 @@ public:
 
     constexpr bool small() const noexcept
     {
-        return (_raw[sso_size] & 0x1) == 0;
+        return INTERN__LIKELY((_raw[sso_size] & 0x1) == 0);
     }
 
     constexpr size_type size() const noexcept
     {
-        return small()
+        return INTERN__LIKELY(small())
             ? sso_size - (_raw[sso_size] >> 1)
             : far().size();
     }
 
     constexpr const_pointer data() const noexcept
     {
-        return small()
+        return INTERN__LIKELY(small())
             ? _raw
             : far().data();
     }
@@ -89,7 +90,7 @@ public:
 private:
     constexpr string_sso_tiny(const char* s, size_type sz)
     {
-        assert(sz <= sso_size);
+        INTERN__ASSUME(sz <= sso_size);
         Traits::copy(_raw, s, sz);
         _raw[sz] = '\0';
         _raw[sso_size] = (sso_size - sz) << 1;

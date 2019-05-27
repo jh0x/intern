@@ -22,12 +22,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <intern/config.hpp>
 #include <string>
+#ifdef INTERN_HAS_STRING_VIEW
 #include <string_view>
+#endif
 #include <intern/details/string_common.hpp>
 
 namespace intern
 {
+#ifdef INTERN_HAS_STRING_VIEW
 template<typename T, typename Traits>
 constexpr bool operator==(
         const details::string_common<T, Traits>& a,
@@ -44,6 +48,7 @@ constexpr bool operator==(
 {
     return a.size() == b.size() && !Traits::cmp(a.data(), b.data(), a.size());
 }
+#endif
 
 template<typename T, typename Traits>
 constexpr bool operator==(

@@ -21,12 +21,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <intern/interner.hpp>
+
 #include <string>
 #include <cstring>
+#ifdef INTERN_HAS_STRING_VIEW
 #include <string_view>
+#endif
 #include <parallel_hashmap/phmap.h>
 
-#include <intern/interner.hpp>
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -35,8 +38,12 @@ struct hash_sv
 {
     std::size_t operator()(const char* s, std::size_t l) const
     {
+#ifdef INTERN_HAS_STRING_VIEW
         auto sv = std::string_view(s, l);
         return std::hash<std::string_view>{}(sv);
+#else
+        return std::_Hash_impl::hash(s, l);
+#endif
     }
 };
 
