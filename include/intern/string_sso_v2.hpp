@@ -46,7 +46,7 @@ public:
     template<typename, typename> friend class interner;
 
     constexpr static auto _min_sso_size = 16;
-    constexpr static auto _max_size = S - 8 - sizeof(size_type);
+    constexpr static auto _max_size = S - sizeof(char*) - sizeof(size_type);
     constexpr static auto sso_size = _max_size - 1;
     static_assert(S >= _min_sso_size, "size too small");
     static_assert(S % 8 == 0, "size should be a multiple of 8");
