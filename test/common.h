@@ -22,30 +22,16 @@
 // SOFTWARE.
 
 #include <intern/interner.hpp>
+#include <intern/interner_demo_traits.hpp>
 
 #include <string>
 #include <cstring>
-#ifdef INTERN_HAS_STRING_VIEW
-#include <string_view>
-#endif
 #include <parallel_hashmap/phmap.h>
 
 
 ///////////////////////////////////////////////////////////////////////
 
-// We need some form of a hash - nothing fancy here:
-struct hash_sv
-{
-    std::size_t operator()(const char* s, std::size_t l) const
-    {
-#ifdef INTERN_HAS_STRING_VIEW
-        auto sv = std::string_view(s, l);
-        return std::hash<std::string_view>{}(sv);
-#else
-        return std::_Hash_impl::hash(s, l);
-#endif
-    }
-};
+using hash_sv = intern::interner_sample_hash;
 
 // And we want string_common to conform...
 namespace intern
@@ -57,16 +43,6 @@ std::size_t hash_value(const intern::details::string_common<T, Traits>& s)
 }
 }
 
-#ifdef __cpp_exceptions
-[[noreturn]] static void _bad_alloc() {
-    throw std::bad_alloc{};
-}
-#else
-[[noreturn]] static void _bad_alloc() noexcept {
-    std::abort();
-}
-#endif
-
 constexpr static auto kBufferSize = 1 << 20;
 
 // Minimal interner configuration
@@ -77,14 +53,14 @@ struct interner_traits1
     using lookupT = phmap::parallel_flat_hash_map<K, V>;
 
     static void* allocate(std::size_t s, std::size_t a)
-        noexcept(noexcept(_bad_alloc()))
+        noexcept(noexcept(intern::_bad_alloc()))
     {
         _off() = ((_off() + (a - 1)) & -a);
         void* ptr = _buf() + _off();
         _off() += s;
         if(_off() > kBufferSize)
         {
-            _bad_alloc();
+            intern::_bad_alloc();
         }
         return ptr;
     }
@@ -112,14 +88,14 @@ struct interner_traits2
     using lookupT = phmap::parallel_flat_hash_map<K, V>;
 
     static void* allocate(std::size_t s, std::size_t a)
-        noexcept(noexcept(_bad_alloc()))
+        noexcept(noexcept(intern::_bad_alloc()))
     {
         _off() = ((_off() + (a - 1)) & -a);
         void* ptr = _buf() + _off();
         _off() += s;
         if(_off() > kBufferSize)
         {
-            _bad_alloc();
+            intern::_bad_alloc();
         }
         return ptr;
     }
