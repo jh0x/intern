@@ -2,22 +2,106 @@
 Simple Interner for Immutable Strings
 
 ## Table of Contents
+- [Interner](#interner)
+    - [Simple Example](#simple-example)
 - [Small Strings](#small-strings)
     - [Tiny Small String](#tiny-small-string)
     - [Small String V1](#small-string-v1)
     - [Small String V2](#small-string-v2)
 - [Internals Demo](#internals-demo)
 
+## Interner
+### Simple Example
+
+```cpp
+#include <intern/interner.hpp>
+#include <intern/interner_demo_traits.hpp>
+#include <intern/string_io.hpp>
+#include <iostream>
+
+namespace x = intern;
+
+constexpr static auto long_string =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+
+int main()
+{
+    x::interner<x::interner_sample_traits<(1<<16)>> interner;
+
+    {
+        // Far string - will be interned
+        auto far1 = interner.far(long_string);
+        auto far2 = interner.far(long_string);
+        auto far3 = far2;
+
+        std::cout << "(void*)far1.data()=" << (void*)far1.data()
+            << ", far1=" << far1 << '\n';
+        std::cout << "(void*)far2.data()=" << (void*)far2.data()
+            << ", far2=" << far2 << '\n';
+        std::cout << "(void*)far3.data()=" << (void*)far3.data()
+            << ", far3=" << far3 << '\n';
+    }
+    std::cout << "\n";
+    {
+        // Different flavours of SSO
+        // Will not intern if string fits in the SSO
+        auto tiny = interner.tiny("SPY");
+        auto small1 = interner.sso1<16>("SPY");
+        auto small2 = interner.sso2<16>("SPY");
+
+        std::cout << "  (void*)tiny.data()=" << (void*)tiny.data()
+            << ",   &tiny=" << &tiny << ",   tiny=" << tiny << '\n';
+        std::cout << "(void*)small1.data()=" << (void*)small1.data()
+            << ", &small1=" << &small1 << ", small1=" << small1 << '\n';
+        std::cout << "(void*)small2.data()=" << (void*)small2.data()
+            << ", &small2=" << &small2 << ", small2=" << small2 << '\n';
+    }
+    std::cout << "\n";
+    {
+        // But falls back to using interner with longer strings
+        auto tiny = interner.tiny(long_string);
+        auto small1 = interner.sso1<16>(long_string);
+        auto small2 = interner.sso2<16>(long_string);
+
+        std::cout << "  (void*)tiny.data()=" << (void*)tiny.data()
+            << ",   &tiny=" << &tiny << ",   tiny=" << tiny << '\n';
+        std::cout << "(void*)small1.data()=" << (void*)small1.data()
+            << ", &small1=" << &small1 << ", small1=" << small1 << '\n';
+        std::cout << "(void*)small2.data()=" << (void*)small2.data()
+            << ", &small2=" << &small2 << ", small2=" << small2 << '\n';
+    }
+}
+```
+
+And sample output:
+
+```
+(void*)far1.data()=0x4051da, far1=Lorem ipsum dolor sit amet, consectetur adipiscing elit
+(void*)far2.data()=0x4051da, far2=Lorem ipsum dolor sit amet, consectetur adipiscing elit
+(void*)far3.data()=0x4051da, far3=Lorem ipsum dolor sit amet, consectetur adipiscing elit
+
+  (void*)tiny.data()=0x7ffea02056c0,   &tiny=0x7ffea02056c0,   tiny=SPY
+(void*)small1.data()=0x7ffea02056d0, &small1=0x7ffea02056d0, small1=SPY
+(void*)small2.data()=0x7ffea02056ea, &small2=0x7ffea02056e0, small2=SPY
+
+  (void*)tiny.data()=0x4051da,   &tiny=0x7ffea0205698,   tiny=Lorem ipsum dolor sit amet, consectetur adipiscing elit
+(void*)small1.data()=0x4051da, &small1=0x7ffea02056a0, small1=Lorem ipsum dolor sit amet, consectetur adipiscing elit
+(void*)small2.data()=0x4051da, &small2=0x7ffea02056c0, small2=Lorem ipsum dolor sit amet, consectetur adipiscing elit
+```
+
+For more information about the internals of the different Small Strings
+see [Small Strings](#small-strings).
+
 ## Small Strings
 ### Tiny Small String
 
 - `sizeof(T) == sizeof(char*)`
 - `sso_size == sizeof(T) - 1`
-- last byte used to store adjusted size (SSO) and a flag indicating whether SSO is being used.
-- non-SSO case requires that the far data is at least `alignas(2)` because we use the least significant bit for storing non-SSO flag.
-- non-SSO case stores the data pointer in Big Endian notation thus needed a `bswap` on the way in and out.
-- trivial to copy
-- checking whether `small()` always required
+- Last byte used to store adjusted size (SSO) and a flag indicating whether SSO is being used.
+- Non-SSO case requires that the far data is at least `alignas(2)` because we use the least significant bit for storing non-SSO flag.
+- Non-SSO case stores the data pointer in Big Endian notation thus needed a `bswap` on the way in and out.
+- Trivial to copy,
+- Checking whether `small()` always required.
 
 #### Examples:
 ##### SSO
@@ -64,10 +148,11 @@ Little Endian representation does not work with our SSO so we need to do a bswap
 
 - `sizeof(T) == S`, `S >= 16`, `S % 8 == 0`
 - `sso_size == S - 1`
-- last byte used to store adjusted size (SSO) and a flag indicating whether SSO is being used.
-- non-SSO case stores the data pointer in natural representation. We also store string length locally.
-- trivial to copy
-- checking whether `small()` always required
+- Parameter `S` introduces extra SSO space into the structure.
+- Last byte used to store adjusted size (SSO) and a flag indicating whether SSO is being used.
+- Mon-SSO case stores the data pointer in natural representation. We also store string length locally.
+- Trivial to copy.
+- Checking whether `small()` always required.
 
 #### Examples:
 ##### SSO
@@ -126,9 +211,10 @@ const char* ptr = 0x000000000040724a, sz = 130 (0x82)
 ### Small String V2
 - `sizeof(T) == S`, `S >= 16`, `S % 8 == 0`
 - `sso_size == S - 8 - sizeof(size_type)`
-- not trivial to copy
-- data always directly under the pointer
-- check whether `small()` **NOT** always required.
+- Parameter `S` introduces extra SSO space into the structure.
+- Not trivial to copy.
+- Data always directly under the pointer.
+- Check whether `small()` **NOT** always required.
 
 #### Examples:
 ##### SSO
