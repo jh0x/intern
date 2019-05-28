@@ -132,6 +132,10 @@ target_include_directories(internals SYSTEM PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/extern/phmap>)
 target_link_libraries(internals intern)
 
+add_executable(simple_example test/simple_example.cpp)
+target_include_directories(simple_example SYSTEM PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/extern/phmap>)
+target_link_libraries(simple_example intern)
 
 ####################################################################
 ## Stuff needed to export as a CMake project
