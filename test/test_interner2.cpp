@@ -22,7 +22,5 @@
 
 #include "test_interner.h"
 
-
-
 TEST_IT(DefaultStrOps);
 
